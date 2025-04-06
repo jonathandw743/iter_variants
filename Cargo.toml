@@ -1,0 +1,10 @@
+[package]
+name = "iter_variants"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+iter_variants_derive = { path = "derive" }
+
+[workspace]
+members = ["derive"]
