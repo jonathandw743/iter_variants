@@ -4,14 +4,14 @@ version = 4
 
 [[package]]
 name = "iter_variants"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "iter_variants_derive",
 ]
 
 [[package]]
 name = "iter_variants_derive"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "proc-macro2",
  "quote",

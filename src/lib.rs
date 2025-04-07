@@ -2,13 +2,13 @@ pub use iter_variants_derive::IterVariants;
 use iter_variants_derive::impl_iter_variants_tuple;
 
 pub trait IterVariants {
-    type T;
-    fn iter_variants<F: Fn(Self::T)>(f: F);
+    type IterVariantsInput;
+    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F);
 }
 
 impl IterVariants for bool {
-    type T = Self;
-    fn iter_variants<F: Fn(Self::T)>(f: F) {
+    type IterVariantsInput = Self;
+    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
         f(false);
         f(true);
     }
@@ -16,10 +16,10 @@ impl IterVariants for bool {
 
 impl<U: IterVariants> IterVariants for Option<U>
 where
-    <U as IterVariants>::T: IterVariants,
+    <U as IterVariants>::IterVariantsInput: IterVariants,
 {
-    type T = Option<<U as IterVariants>::T>;
-    fn iter_variants<F: Fn(Self::T)>(f: F) {
+    type IterVariantsInput = Option<<U as IterVariants>::IterVariantsInput>;
+    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
         f(None);
         U::iter_variants(|v| f(Some(v)));
     }
@@ -28,8 +28,8 @@ where
 macro_rules! impl_iter_variants_for_primitives {
     ( $t:ty ) => {
         impl IterVariants for $t {
-            type T = Self;
-            fn iter_variants<F: Fn(Self::T)>(f: F) {
+            type IterVariantsInput = Self;
+            fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
                 for i in <$t>::MIN..=<$t>::MAX {
                     f(i);
                 }

@@ -73,8 +73,8 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
 
     let expanded = quote! {
         impl IterVariants for #ident {
-            type T = Self;
-            fn iter_variants<F: Fn(Self::T)>(f: F) {
+            type IterVariantsInput = Self;
+            fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
                 #output
             }
         }
@@ -105,10 +105,10 @@ pub fn impl_iter_variants_tuple(_input: pm::TokenStream) -> pm::TokenStream {
         quote! {
             impl<#(#v_types: IterVariants,)*> IterVariants for (#(#v_types,)*)
             where
-                #(<#v_types as IterVariants>::T: IterVariants + Copy,)*
+                #(<#v_types as IterVariants>::IterVariantsInput: IterVariants + Copy,)*
             {
-                type T = (#(<#v_types as IterVariants>::T,)*);
-                fn iter_variants<F: Fn(Self::T)>(f: F) {
+                type IterVariantsInput = (#(<#v_types as IterVariants>::IterVariantsInput,)*);
+                fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
                     #result
                 }
             }
