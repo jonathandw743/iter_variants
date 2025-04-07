@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "iter_variants"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "iter_variants_derive",
 ]
