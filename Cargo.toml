@@ -5,6 +5,7 @@ edition = "2024"
 license = "MIT"
 repository = "https://github.com/jonathandw743/iter_variants"
 homepage = "https://github.com/jonathandw743/iter_variants"
+description = "A way to iterate over all variants of a rust struct/enum"
 
 [dependencies]
 iter_variants_derive = { path = "derive", version = "0.1.0" }

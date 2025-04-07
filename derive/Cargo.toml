@@ -5,6 +5,7 @@ edition = "2024"
 license = "MIT"
 repository = "https://github.com/jonathandw743/iter_variants"
 homepage = "https://github.com/jonathandw743/iter_variants"
+description = "Derive macros for iterating over all variants of a rust struct/enum"
 
 [dependencies]
 proc-macro2 = "1.0.94"
