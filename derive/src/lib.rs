@@ -1,8 +1,9 @@
-use proc_macro::TokenStream;
+use proc_macro as pm;
+use proc_macro2::{self as pm2, Span};
 use quote::{format_ident, quote};
-use syn::{Data, DeriveInput, Fields, parse_macro_input};
+use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident};
 
-fn do_fields(fields: &Fields, ident: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
     match fields {
         Fields::Unnamed(fields_unnamed) => {
             let vs = (0..fields_unnamed.unnamed.len()).map(|i| format_ident!("v{}", i));
@@ -47,7 +48,7 @@ fn do_fields(fields: &Fields, ident: proc_macro2::TokenStream) -> proc_macro2::T
 }
 
 #[proc_macro_derive(IterVariants)]
-pub fn iter_variants_derive(input: TokenStream) -> TokenStream {
+pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let ident = input.ident;
 
@@ -79,5 +80,42 @@ pub fn iter_variants_derive(input: TokenStream) -> TokenStream {
         }
     };
 
-    TokenStream::from(expanded)
+    pm::TokenStream::from(expanded)
+}
+
+#[proc_macro]
+pub fn impl_iter_variants_tuple(_input: pm::TokenStream) -> pm::TokenStream {
+    let output = (0..=12).map(|n| {
+        let vs = (0..n).map(|i| Ident::new(&format!("v{}", i), Span::call_site()));
+        let v_types: Vec<_> = (0..n).map(|i| Ident::new(&format!("V{}", i), Span::call_site())).collect();
+        let mut result = {
+            let vs = vs.clone();
+            quote! {
+                f((#(#vs,)*))
+            }
+        };
+        {
+            let v_types = v_types.clone();
+            for (v_type, v) in v_types.iter().zip(vs) {
+                result = quote! {
+                    #v_type::iter_variants(|#v| #result)
+                }
+            }
+        }
+        quote! {
+            impl<#(#v_types: IterVariants,)*> IterVariants for (#(#v_types,)*)
+            where
+                #(<#v_types as IterVariants>::T: IterVariants + Copy,)*
+            {
+                type T = (#(<#v_types as IterVariants>::T,)*);
+                fn iter_variants<F: Fn(Self::T)>(f: F) {
+                    #result
+                }
+            }
+        }
+    });
+
+    pm::TokenStream::from(quote! {
+        #(#output)*
+    })
 }

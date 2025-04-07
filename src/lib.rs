@@ -1,3 +1,4 @@
+use iter_variants_derive::impl_iter_variants_tuple;
 pub use iter_variants_derive::IterVariants;
 
 pub trait IterVariants {
@@ -5,65 +6,37 @@ pub trait IterVariants {
     fn iter_variants<F: Fn(Self::T)>(f: F);
 }
 
-#[derive(IterVariants)]
-struct Foo;
-
-// impl IterVariants for Foo {
-//     type T = Self;
-//     fn iter_variants<F: Fn(Self::T)>(f: F) {
-//         f(Self);
-//     }
-// }
-
-#[derive(Clone, Copy, IterVariants, Debug)]
-enum Bar {
-    A,
-    B,
+impl IterVariants for bool {
+    type T = Self;
+    fn iter_variants<F: Fn(Self::T)>(f: F) {
+        f(false);
+        f(true);
+    }
 }
 
-// impl IterVariants for Bar {
-//     type T = Self;
-//     fn iter_variants<F: Fn(Self::T)>(f: F) {
-//         f(Self::A);
-//         f(Self::B);
-//     }
-// }
-
-#[derive(IterVariants)]
-struct Baz {
-    a: Bar,
-    b: Bar,
+macro_rules! impl_iter_variants_for_primitives {
+    ( $t:ty ) => {
+        impl IterVariants for $t {
+            type T = Self;
+            fn iter_variants<F: Fn(Self::T)>(f: F) {
+                for i in <$t>::MIN..=<$t>::MAX {
+                    f(i);
+                }
+            }
+        }
+    };
 }
 
-// impl IterVariants for Baz {
-//     type T = Self;
-//     fn iter_variants<F: Fn(Self)>(f: F) {
-//         Bar::iter_variants(|a| Bar::iter_variants(|b| f(Self { a, b })));
-//     }
-// }
+impl_iter_variants_for_primitives!(u8);
+impl_iter_variants_for_primitives!(u16);
+impl_iter_variants_for_primitives!(u32);
+impl_iter_variants_for_primitives!(u64);
+impl_iter_variants_for_primitives!(u128);
 
-#[derive(IterVariants)]
-struct A(Bar, Bar);
+impl_iter_variants_for_primitives!(i8);
+impl_iter_variants_for_primitives!(i16);
+impl_iter_variants_for_primitives!(i32);
+impl_iter_variants_for_primitives!(i64);
+impl_iter_variants_for_primitives!(i128);
 
-// impl IterVariants for A {
-//     type T = Self;
-//     fn iter_variants<F: Fn(Self::T)>(f: F) {
-//         Bar::iter_variants(|v0| Bar::iter_variants(|v1| f(Self(v0, v1))));
-//     }
-// }
-
-#[derive(IterVariants, Debug)]
-pub enum B {
-    A(Bar, Bar),
-    B,
-    C { a: Bar, b: Bar },
-}
-
-// impl IterVariants for B {
-//     type T = Self;
-//     fn iter_variants<F: Fn(Self::T)>(f: F) {
-//         Bar::iter_variants(|v0| Bar::iter_variants(|v1| f(Self::A(v0, v1))));
-//         f(Self::B);
-//         Bar::iter_variants(|a| Bar::iter_variants(|b| f(Self::C { a, b })));
-//     }
-// }
+impl_iter_variants_tuple!();
