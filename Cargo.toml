@@ -2,6 +2,9 @@
 name = "iter_variants"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+repository = "https://github.com/jonathandw743/iter_variants"
+homepage = "https://github.com/jonathandw743/iter_variants"
 
 [dependencies]
 iter_variants_derive = { path = "derive", version = "0.1.0" }

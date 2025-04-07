@@ -2,6 +2,9 @@
 name = "iter_variants_derive"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+repository = "https://github.com/jonathandw743/iter_variants"
+homepage = "https://github.com/jonathandw743/iter_variants"
 
 [dependencies]
 proc-macro2 = "1.0.94"
