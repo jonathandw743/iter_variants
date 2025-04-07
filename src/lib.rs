@@ -43,11 +43,38 @@ impl_iter_variants_for_primitives!(u16);
 impl_iter_variants_for_primitives!(u32);
 impl_iter_variants_for_primitives!(u64);
 impl_iter_variants_for_primitives!(u128);
+impl_iter_variants_for_primitives!(usize);
 
 impl_iter_variants_for_primitives!(i8);
 impl_iter_variants_for_primitives!(i16);
 impl_iter_variants_for_primitives!(i32);
 impl_iter_variants_for_primitives!(i64);
 impl_iter_variants_for_primitives!(i128);
+impl_iter_variants_for_primitives!(isize);
 
 impl_iter_variants_tuple!();
+
+#[cfg(test)]
+#[allow(dead_code)]
+mod tests {
+    use super::IterVariants;
+
+    #[derive(IterVariants, Clone, Copy)]
+    enum A {
+        B, C
+    }
+
+    #[derive(IterVariants)]
+    struct Foo(Option<()>, u32, bool, Option<A>);
+
+    #[derive(IterVariants)]
+    enum Bar {
+        A(bool),
+        B(Option<bool>, usize),
+        C,
+        D {
+            x: i32,
+            y: Option<A>,
+        }
+    }
+}

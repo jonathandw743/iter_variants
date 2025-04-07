@@ -1,7 +1,7 @@
 use proc_macro as pm;
 use proc_macro2::{self as pm2, Span};
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident};
+use syn::{parse_macro_input, token::PathSep, Data, DeriveInput, Fields, Ident, PathArguments, Type};
 
 fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
     match fields {
@@ -14,10 +14,18 @@ fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
                 }
             };
             for (field, v) in fields_unnamed.unnamed.iter().zip(vs) {
-                let ty = &field.ty;
+                let mut ty = field.ty.clone();
+                // Option<T> -> Option::<T>
+                if let Type::Path(type_path) = &mut ty {
+                    if let Some(segment) = type_path.path.segments.last_mut() {
+                        if let PathArguments::AngleBracketed(generic_arguments) = &mut segment.arguments {
+                            generic_arguments.colon2_token = Some(PathSep { spans: [Span::call_site(); 2] })
+                        }
+                    }
+                }
                 result = quote! {
                     #ty::iter_variants(|#v| #result)
-                }
+                };
             }
             result
         }
@@ -34,7 +42,15 @@ fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
             };
             for field in &fields_named.named {
                 let ident = field.ident.clone();
-                let ty = field.ty.clone();
+                let mut ty = field.ty.clone();
+                // Option<T> -> Option::<T>
+                if let Type::Path(type_path) = &mut ty {
+                    if let Some(segment) = type_path.path.segments.last_mut() {
+                        if let PathArguments::AngleBracketed(generic_arguments) = &mut segment.arguments {
+                            generic_arguments.colon2_token = Some(PathSep { spans: [Span::call_site(); 2] })
+                        }
+                    }
+                }
                 result = quote! {
                     #ty::iter_variants(|#ident| #result)
                 }
@@ -87,7 +103,9 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
 pub fn impl_iter_variants_tuple(_input: pm::TokenStream) -> pm::TokenStream {
     let output = (0..=12).map(|n| {
         let vs = (0..n).map(|i| Ident::new(&format!("v{}", i), Span::call_site()));
-        let v_types: Vec<_> = (0..n).map(|i| Ident::new(&format!("V{}", i), Span::call_site())).collect();
+        let v_types: Vec<_> = (0..n)
+            .map(|i| Ident::new(&format!("V{}", i), Span::call_site()))
+            .collect();
         let mut result = {
             let vs = vs.clone();
             quote! {
