@@ -1,7 +1,7 @@
 use proc_macro as pm;
 use proc_macro2::{self as pm2, Span};
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, token::PathSep, Data, DeriveInput, Fields, Ident, PathArguments, Type};
+use syn::{parse_macro_input, token::PathSep, Data, DeriveInput, Fields, PathArguments, Type};
 
 fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
     match fields {
