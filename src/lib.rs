@@ -1,5 +1,59 @@
 pub use iter_variants_derive::IterVariants;
-use iter_variants_derive::impl_iter_variants_tuple;
+
+macro_rules! impl_iter_variants_tuple {
+    () => {
+        impl_iter_variants_tuple! {
+            V0,
+            V1,
+            V2,
+            V3,
+            V4,
+            V5,
+            V6,
+            V7,
+            V8,
+            V9,
+            V10,
+            V11,
+        }
+    };
+    ($($t:ident),+ $(,)?) => {
+        impl_iter_variants_tuple!(@each() $($t)*);
+    };
+    (@each($($c:ident)*)) => {
+        impl_iter_variants_tuple!(@impl());
+    };
+    (@each($($c:ident)*) $f:ident $($t:ident)*) => {
+        impl_iter_variants_tuple!(@impl() $($c)* $f);
+        impl_iter_variants_tuple!(@each($($c)* $f) $($t)*);
+    };
+    (@impl() $($t:ident)*) => {
+        impl<$($t),*> IterVariants for ($($t,)*)
+        where
+            $($t: IterVariants,)*
+            $(<$t as IterVariants>::IterVariantsInput: IterVariants + Copy,)*
+        {
+            type IterVariantsInput = ($(<$t as IterVariants>::IterVariantsInput,)*);
+
+            fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+                impl_iter_variants_tuple!(@expr {
+                    f(($($t,)*))
+                } $($t)*);
+            }
+        }
+    };
+    (@expr $b:block) => {
+        $b
+    };
+    (@expr $b:block $f:ident $($t:ident)*) => {
+        impl_iter_variants_tuple!(@expr {
+            #[allow(non_snake_case)]
+            $f::iter_variants(|$f| {
+                $b
+            })
+        } $($t)*);
+    };
+}
 
 pub trait IterVariants {
     type IterVariantsInput;
