@@ -1,3 +1,5 @@
+#![no_std]
+
 pub use iter_variants_derive::IterVariants;
 use iter_variants_derive::impl_iter_variants_tuple;
 
