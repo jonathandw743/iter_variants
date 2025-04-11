@@ -110,6 +110,7 @@ impl_iter_variants_tuple!();
 #[allow(dead_code)]
 mod tests {
     use core::num::{NonZeroU8, Wrapping};
+    use core::cell::RefCell;
 
     use super::IterVariants;
 
@@ -133,5 +134,34 @@ mod tests {
             x: i32,
             y: Option<A>,
         }
+    }
+
+    #[derive(IterVariants, Debug, PartialEq, Eq, Clone, Copy)]
+    enum Baz<T: Sync>
+    where T: Send,
+    {
+        A(bool),
+        B(T),
+    }
+
+    #[test]
+    fn test_generic_param() {
+        let output = RefCell::new([None; 6]);
+        Baz::<(bool, bool)>::iter_variants(|v| {
+            let borrow_mut = &mut output.borrow_mut();
+            let slot = borrow_mut
+                .iter_mut()
+                .find(|x| x.is_none())
+                .unwrap();
+            *slot = Some(v);
+        });
+        assert_eq!(*output.borrow(), [
+            Some(Baz::A(false)),
+            Some(Baz::A(true)),
+            Some(Baz::B((false, false))),
+            Some(Baz::B((true,  false))),
+            Some(Baz::B((false, true))),
+            Some(Baz::B((true,  true))),
+        ]);
     }
 }

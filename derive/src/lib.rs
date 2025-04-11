@@ -24,7 +24,7 @@ fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
                     }
                 }
                 result = quote! {
-                    #ty::iter_variants(|#v| #result)
+                    <#ty as IterVariants>::iter_variants(|#v| #result)
                 };
             }
             result
@@ -80,15 +80,21 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
             }
         }
         Data::Struct(data_struct) => {
-            let ident = ident.clone();
             do_fields(&data_struct.fields, quote! { #ident })
         }
         _ => syn::Error::new_spanned(&ident, "`Name` can only be derived for enums or structs")
             .to_compile_error(),
     };
 
+    let gidents = input.generics.type_params().map(|p| &p.ident);
+    let (implg, typeg, where_clause) = input.generics.split_for_impl();
+    let where_clause = where_clause.map(|w| &w.predicates);
     let expanded = quote! {
-        impl IterVariants for #ident {
+        impl #implg IterVariants for #ident #typeg
+        where
+            #(#gidents: IterVariants<IterVariantsInput = #gidents>,)*
+            #where_clause
+        {
             type IterVariantsInput = Self;
             fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
                 #output
