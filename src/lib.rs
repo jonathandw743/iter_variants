@@ -203,19 +203,19 @@ mod tests {
     fn test_generic_param() {
         let mut output = [None; 6];
         Baz::<(bool, bool)>::iter_variants(|v| {
-            let slot = output
-                .iter_mut()
-                .find(|x| x.is_none())
-                .unwrap();
+            let slot = output.iter_mut().find(|x| x.is_none()).unwrap();
             *slot = Some(v);
         });
-        assert_eq!(output, [
-            Some(Baz::A(false)),
-            Some(Baz::A(true)),
-            Some(Baz::B((false, false))),
-            Some(Baz::B((true,  false))),
-            Some(Baz::B((false, true))),
-            Some(Baz::B((true,  true))),
-        ]);
+        assert_eq!(
+            output,
+            [
+                Some(Baz::A(false)),
+                Some(Baz::A(true)),
+                Some(Baz::B((false, false))),
+                Some(Baz::B((true, false))),
+                Some(Baz::B((false, true))),
+                Some(Baz::B((true, true))),
+            ]
+        );
     }
 }
