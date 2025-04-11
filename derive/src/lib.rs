@@ -1,7 +1,7 @@
 use proc_macro as pm;
 use proc_macro2::{self as pm2, Span};
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, token::PathSep, Data, DeriveInput, Fields, Ident, PathArguments, Type};
+use syn::{parse_macro_input, token::PathSep, Data, DeriveInput, Fields, PathArguments, Type};
 
 fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
     match fields {
@@ -103,43 +103,4 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
     };
 
     pm::TokenStream::from(expanded)
-}
-
-#[proc_macro]
-pub fn impl_iter_variants_tuple(_input: pm::TokenStream) -> pm::TokenStream {
-    let output = (0..=12).map(|n| {
-        let vs = (0..n).map(|i| Ident::new(&format!("v{}", i), Span::call_site()));
-        let v_types: Vec<_> = (0..n)
-            .map(|i| Ident::new(&format!("V{}", i), Span::call_site()))
-            .collect();
-        let mut result = {
-            let vs = vs.clone();
-            quote! {
-                f((#(#vs,)*))
-            }
-        };
-        {
-            let v_types = v_types.clone();
-            for (v_type, v) in v_types.iter().zip(vs) {
-                result = quote! {
-                    #v_type::iter_variants(|#v| #result)
-                }
-            }
-        }
-        quote! {
-            impl<#(#v_types: IterVariants,)*> IterVariants for (#(#v_types,)*)
-            where
-                #(<#v_types as IterVariants>::IterVariantsInput: IterVariants + Copy,)*
-            {
-                type IterVariantsInput = (#(<#v_types as IterVariants>::IterVariantsInput,)*);
-                fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
-                    #result
-                }
-            }
-        }
-    });
-
-    pm::TokenStream::from(quote! {
-        #(#output)*
-    })
 }
