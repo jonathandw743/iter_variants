@@ -65,7 +65,7 @@ macro_rules! impl_iter_variants_tuple {
 pub trait IterVariants {
     type IterVariantsInput;
     /// calls the provided function on all variants of `Self` to any depth.
-    /// For example, for `Option<bool>`, `f(Some(true))`, `f(Some(false)`) and `f(None)` will be called.
+    /// For example, for `Option<bool>`, `f(Some(true))`, `f(Some(false))` and `f(None)` will be called.
     fn iter_variants<F: FnMut(Self::IterVariantsInput)>(f: F);
 }
 
