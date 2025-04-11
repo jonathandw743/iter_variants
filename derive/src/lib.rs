@@ -88,7 +88,7 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
             }
         }
         Data::Struct(data_struct) => do_fields(&data_struct.fields, quote! { #ident }),
-        _ => syn::Error::new_spanned(&ident, "`Name` can only be derived for enums or structs")
+        _ => syn::Error::new_spanned(&ident, "`IterVariants` can only be derived for enums or structs")
             .to_compile_error(),
     };
 
