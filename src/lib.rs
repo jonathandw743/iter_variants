@@ -1,6 +1,9 @@
 #![no_std]
 
-use core::{marker::{PhantomData, PhantomPinned}, num::*};
+use core::{
+    marker::{PhantomData, PhantomPinned},
+    num::*,
+};
 
 pub use iter_variants_derive::IterVariants;
 
@@ -142,18 +145,18 @@ impl_iter_variants_for_primitives!(i64);
 impl_iter_variants_for_primitives!(i128);
 impl_iter_variants_for_primitives!(isize);
 
-impl_iter_variants_for_nonzeros!(u8,    NonZeroU8);
-impl_iter_variants_for_nonzeros!(u16,   NonZeroU16);
-impl_iter_variants_for_nonzeros!(u32,   NonZeroU32);
-impl_iter_variants_for_nonzeros!(u64,   NonZeroU64);
-impl_iter_variants_for_nonzeros!(u128,  NonZeroU128);
+impl_iter_variants_for_nonzeros!(u8, NonZeroU8);
+impl_iter_variants_for_nonzeros!(u16, NonZeroU16);
+impl_iter_variants_for_nonzeros!(u32, NonZeroU32);
+impl_iter_variants_for_nonzeros!(u64, NonZeroU64);
+impl_iter_variants_for_nonzeros!(u128, NonZeroU128);
 impl_iter_variants_for_nonzeros!(usize, NonZeroUsize);
 
-impl_iter_variants_for_nonzeros!(i8,    NonZeroI8);
-impl_iter_variants_for_nonzeros!(i16,   NonZeroI16);
-impl_iter_variants_for_nonzeros!(i32,   NonZeroI32);
-impl_iter_variants_for_nonzeros!(i64,   NonZeroI64);
-impl_iter_variants_for_nonzeros!(i128,  NonZeroI128);
+impl_iter_variants_for_nonzeros!(i8, NonZeroI8);
+impl_iter_variants_for_nonzeros!(i16, NonZeroI16);
+impl_iter_variants_for_nonzeros!(i32, NonZeroI32);
+impl_iter_variants_for_nonzeros!(i64, NonZeroI64);
+impl_iter_variants_for_nonzeros!(i128, NonZeroI128);
 impl_iter_variants_for_nonzeros!(isize, NonZeroIsize);
 
 impl_iter_variants_for_primitives!(char);
@@ -169,7 +172,8 @@ mod tests {
 
     #[derive(IterVariants, Clone, Copy)]
     enum A {
-        B, C
+        B,
+        C,
     }
 
     #[derive(IterVariants)]
@@ -183,15 +187,13 @@ mod tests {
         A(bool),
         B(Option<bool>, usize),
         C,
-        D {
-            x: i32,
-            y: Option<A>,
-        }
+        D { x: i32, y: Option<A> },
     }
 
     #[derive(IterVariants, Debug, PartialEq, Eq, Clone, Copy)]
     enum Baz<T: Sync>
-    where T: Send,
+    where
+        T: Send,
     {
         A(bool),
         B(T),
