@@ -1,7 +1,7 @@
 use proc_macro as pm;
 use proc_macro2::{self as pm2, Span};
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, token::PathSep, Data, DeriveInput, Fields, PathArguments, Type};
+use syn::{Data, DeriveInput, Fields, PathArguments, Type, parse_macro_input, token::PathSep};
 
 fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
     match fields {
@@ -18,8 +18,12 @@ fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
                 // Option<T> -> Option::<T>
                 if let Type::Path(type_path) = &mut ty {
                     if let Some(segment) = type_path.path.segments.last_mut() {
-                        if let PathArguments::AngleBracketed(generic_arguments) = &mut segment.arguments {
-                            generic_arguments.colon2_token = Some(PathSep { spans: [Span::call_site(); 2] })
+                        if let PathArguments::AngleBracketed(generic_arguments) =
+                            &mut segment.arguments
+                        {
+                            generic_arguments.colon2_token = Some(PathSep {
+                                spans: [Span::call_site(); 2],
+                            })
                         }
                     }
                 }
@@ -46,8 +50,12 @@ fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
                 // Option<T> -> Option::<T>
                 if let Type::Path(type_path) = &mut ty {
                     if let Some(segment) = type_path.path.segments.last_mut() {
-                        if let PathArguments::AngleBracketed(generic_arguments) = &mut segment.arguments {
-                            generic_arguments.colon2_token = Some(PathSep { spans: [Span::call_site(); 2] })
+                        if let PathArguments::AngleBracketed(generic_arguments) =
+                            &mut segment.arguments
+                        {
+                            generic_arguments.colon2_token = Some(PathSep {
+                                spans: [Span::call_site(); 2],
+                            })
                         }
                     }
                 }
@@ -79,9 +87,7 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
                 #(#arms;)*
             }
         }
-        Data::Struct(data_struct) => {
-            do_fields(&data_struct.fields, quote! { #ident })
-        }
+        Data::Struct(data_struct) => do_fields(&data_struct.fields, quote! { #ident }),
         _ => syn::Error::new_spanned(&ident, "`Name` can only be derived for enums or structs")
             .to_compile_error(),
     };
