@@ -102,7 +102,8 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
             #where_clause
         {
             type IterVariantsInput = Self;
-            fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+            #[allow(unused_mut)]
+            fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
                 #output
             }
         }
