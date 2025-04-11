@@ -6,4 +6,4 @@ Provides a trait `IterVariants` with one method `iter_variants` that takes one a
 
 There is a corresponding derive macro that implements `IterVariants` for enums and structs where all fields are either unit or only contain types that also implement `IterVariants`.
 
-Thanks to @A4-Tacks for work on generics and implementations for many core types.
+Thanks to [@A4-Tacks](https://github.com/A4-Tacks) for work on generics and implementations for many core types.
