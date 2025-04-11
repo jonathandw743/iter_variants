@@ -39,7 +39,7 @@ macro_rules! impl_iter_variants_tuple {
         {
             type IterVariantsInput = ($(<$t as IterVariants>::IterVariantsInput,)*);
 
-            fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+            fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
                 impl_iter_variants_tuple!(@expr {
                     f(($($t,)*))
                 } $($t)*);
@@ -61,30 +61,30 @@ macro_rules! impl_iter_variants_tuple {
 
 pub trait IterVariants {
     type IterVariantsInput;
-    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F);
+    fn iter_variants<F: FnMut(Self::IterVariantsInput)>(f: F);
 }
 
 impl<T: IterVariants> IterVariants for Wrapping<T> {
     type IterVariantsInput = Wrapping<T::IterVariantsInput>;
-    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+    fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
         T::iter_variants(|value| f(Wrapping(value)));
     }
 }
 impl<T: ?Sized> IterVariants for PhantomData<T> {
     type IterVariantsInput = Self;
-    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+    fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
         f(PhantomData)
     }
 }
 impl IterVariants for PhantomPinned {
     type IterVariantsInput = Self;
-    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+    fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
         f(PhantomPinned)
     }
 }
 impl IterVariants for bool {
     type IterVariantsInput = Self;
-    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+    fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
         f(false);
         f(true);
     }
@@ -95,7 +95,7 @@ where
     <U as IterVariants>::IterVariantsInput: IterVariants,
 {
     type IterVariantsInput = Option<<U as IterVariants>::IterVariantsInput>;
-    fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+    fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
         f(None);
         U::iter_variants(|v| f(Some(v)));
     }
@@ -105,7 +105,7 @@ macro_rules! impl_iter_variants_for_primitives {
     ( $t:ty ) => {
         impl IterVariants for $t {
             type IterVariantsInput = Self;
-            fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+            fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
                 for i in <$t>::MIN..=<$t>::MAX {
                     f(i);
                 }
@@ -117,7 +117,7 @@ macro_rules! impl_iter_variants_for_nonzeros {
     ( $prim:ty, $t:ty ) => {
         impl IterVariants for $t {
             type IterVariantsInput = Self;
-            fn iter_variants<F: Fn(Self::IterVariantsInput)>(f: F) {
+            fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
                 for i in <$prim>::MIN..=<$prim>::MAX {
                     if let Some(i) = <$t>::new(i) {
                         f(i);
@@ -164,7 +164,6 @@ impl_iter_variants_tuple!();
 #[allow(dead_code)]
 mod tests {
     use core::num::{NonZeroU8, Wrapping};
-    use core::cell::RefCell;
 
     use super::IterVariants;
 
@@ -200,16 +199,15 @@ mod tests {
 
     #[test]
     fn test_generic_param() {
-        let output = RefCell::new([None; 6]);
+        let mut output = [None; 6];
         Baz::<(bool, bool)>::iter_variants(|v| {
-            let borrow_mut = &mut output.borrow_mut();
-            let slot = borrow_mut
+            let slot = output
                 .iter_mut()
                 .find(|x| x.is_none())
                 .unwrap();
             *slot = Some(v);
         });
-        assert_eq!(*output.borrow(), [
+        assert_eq!(output, [
             Some(Baz::A(false)),
             Some(Baz::A(true)),
             Some(Baz::B((false, false))),
