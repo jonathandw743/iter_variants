@@ -60,7 +60,7 @@ fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
                     }
                 }
                 result = quote! {
-                    #ty::iter_variants(|#ident| #result)
+                    <#ty as IterVariants>::iter_variants(|#ident| #result)
                 }
             }
             result
@@ -71,10 +71,28 @@ fn do_fields(fields: &Fields, ident: pm2::TokenStream) -> pm2::TokenStream {
     }
 }
 
+fn used_types(data: &Data) -> Vec<Type> {
+    match data {
+        Data::Struct(data_struct) => {
+            data_struct.fields.iter()
+                .map(|field| field.ty.clone())
+                .collect()
+        },
+        Data::Enum(data_enum) => {
+            data_enum.variants.iter()
+                .flat_map(|variant| variant.fields.iter())
+                .map(|field| field.ty.clone())
+                .collect()
+        },
+        _ => unreachable!(),
+    }
+}
+
 #[proc_macro_derive(IterVariants)]
 pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let ident = input.ident;
+    let used_types = used_types(&input.data);
 
     let output = match input.data {
         Data::Enum(data_enum) => {
@@ -92,13 +110,12 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
             .to_compile_error(),
     };
 
-    let gidents = input.generics.type_params().map(|p| &p.ident);
     let (implg, typeg, where_clause) = input.generics.split_for_impl();
     let where_clause = where_clause.map(|w| &w.predicates);
     let expanded = quote! {
         impl #implg IterVariants for #ident #typeg
         where
-            #(#gidents: IterVariants<IterVariantsInput = #gidents>,)*
+            #(#used_types: IterVariants<IterVariantsInput = #used_types>,)*
             #where_clause
         {
             type IterVariantsInput = Self;
