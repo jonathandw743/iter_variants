@@ -139,9 +139,7 @@ pub trait IterVariants {
     /// assert_eq!(u8::iter_variants_count(), 256);
     /// assert_eq!(Option::<u8>::iter_variants_count(), 257);
     /// ```
-    fn iter_variants_count() -> usize {
-        1
-    }
+    fn iter_variants_count() -> usize;
 }
 
 impl<T: IterVariants> IterVariants for Wrapping<T> {
@@ -159,11 +157,17 @@ impl<T: ?Sized> IterVariants for PhantomData<T> {
     fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
         f(PhantomData)
     }
+    fn iter_variants_count() -> usize {
+        1
+    }
 }
 impl IterVariants for PhantomPinned {
     type IterVariantsInput = Self;
     fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
         f(PhantomPinned)
+    }
+    fn iter_variants_count() -> usize {
+        1
     }
 }
 impl IterVariants for bool {
