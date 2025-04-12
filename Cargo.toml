@@ -12,8 +12,3 @@ iter_variants_derive = { path = "derive", version = "0.1.3" }
 
 [workspace]
 members = ["derive"]
-
-[features]
-default = []
-# Enables collect_variants (into a Vec)
-collect = []
