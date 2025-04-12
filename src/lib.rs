@@ -62,10 +62,37 @@ macro_rules! impl_iter_variants_tuple {
     };
 }
 
+/// Iterate each variant
+///
+/// # Examples
+/// ```
+/// use iter_variants::IterVariants;
+///
+/// <(bool, bool)>::iter_variants(|value| {
+///     println!("{:?}", value);
+/// });
+/// ```
 pub trait IterVariants {
     type IterVariantsInput;
-    /// calls the provided function on all variants of `Self` to any depth.
+    /// Iterate each variant
+    ///
+    /// Calls the provided function on all variants of `Self` to any depth.
     /// For example, for `Option<bool>`, `f(Some(true))`, `f(Some(false))` and `f(None)` will be called.
+    ///
+    /// # Examples
+    /// ```
+    /// # use iter_variants::IterVariants;
+    /// let mut vec = vec![];
+    /// <(bool, bool)>::iter_variants(|value| {
+    ///     vec.push(value);
+    /// });
+    /// assert_eq!(vec, [
+    ///     (false, false),
+    ///     (true, false),
+    ///     (false, true),
+    ///     (true, true)
+    /// ]);
+    /// ```
     fn iter_variants<F: FnMut(Self::IterVariantsInput)>(f: F);
 }
 
