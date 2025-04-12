@@ -5,8 +5,7 @@ use core::{
     num::*,
 };
 
-#[cfg(feature = "collect")]
-extern crate std;
+extern crate alloc;
 
 pub use iter_variants_derive::IterVariants;
 
@@ -126,9 +125,8 @@ pub trait IterVariants {
     ///     Some((true, true))
     /// ]);
     /// ```
-    #[cfg(feature = "collect")]
-    fn collect_variants() -> std::vec::Vec<Self::IterVariantsInput> {
-        let mut vec = std::vec::Vec::with_capacity(Self::iter_variants_count());
+    fn collect_variants() -> alloc::vec::Vec<Self::IterVariantsInput> {
+        let mut vec = alloc::vec::Vec::with_capacity(Self::iter_variants_count());
         Self::iter_variants(|value| {
             vec.push(value);
         });
@@ -272,8 +270,8 @@ mod tests {
 
     use super::IterVariants;
 
-    extern crate std;
-    use std::vec;
+    extern crate alloc;
+    use alloc::vec;
 
     #[derive(IterVariants)]
     struct Unit;
@@ -382,7 +380,6 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "collect")]
     #[test]
     fn collect_variants_example() {
         assert_eq!(
