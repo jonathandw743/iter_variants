@@ -50,6 +50,12 @@ macro_rules! impl_iter_variants_tuple {
                     f(($($t,)*))
                 } $($t)*);
             }
+
+            fn iter_variants_count() -> usize {
+                impl_iter_variants_tuple!(@count {
+                    1usize
+                } $($t)*)
+            }
         }
     };
     (@expr $b:block) => {
@@ -62,6 +68,14 @@ macro_rules! impl_iter_variants_tuple {
                 $b
             })
         } $($t)*);
+    };
+    (@count {$b:expr}) => {
+        $b
+    };
+    (@count {$b:expr} $f:ident $($t:ident)*) => {
+        impl_iter_variants_tuple!(@count {
+            $b.saturating_mul($f::iter_variants_count())
+        } $($t)*)
     };
 }
 
@@ -120,12 +134,26 @@ pub trait IterVariants {
         });
         vec
     }
+
+    /// Rough variants count, used for optimization
+    ///
+    /// The result may overflow usize, use [`usize::MAX`]
+    /// assert_eq!(u8::iter_variants_count(), 256);
+    /// assert_eq!(Option::<u8>::iter_variants_count(), 257);
+    /// ```
+    fn iter_variants_count() -> usize {
+        1
+    }
 }
 
 impl<T: IterVariants> IterVariants for Wrapping<T> {
     type IterVariantsInput = Wrapping<T::IterVariantsInput>;
     fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
         T::iter_variants(|value| f(Wrapping(value)));
+    }
+
+    fn iter_variants_count() -> usize {
+        T::iter_variants_count()
     }
 }
 impl<T: ?Sized> IterVariants for PhantomData<T> {
@@ -146,6 +174,10 @@ impl IterVariants for bool {
         f(false);
         f(true);
     }
+
+    fn iter_variants_count() -> usize {
+        2
+    }
 }
 
 impl<T: IterVariants> IterVariants for Option<T>
@@ -157,6 +189,10 @@ where
         f(None);
         T::iter_variants(|v| f(Some(v)));
     }
+
+    fn iter_variants_count() -> usize {
+        T::iter_variants_count().saturating_add(1)
+    }
 }
 
 macro_rules! impl_iter_variants_for_primitives {
@@ -167,6 +203,12 @@ macro_rules! impl_iter_variants_for_primitives {
                 for i in <$t>::MIN..=<$t>::MAX {
                     f(i);
                 }
+            }
+
+            fn iter_variants_count() -> usize {
+                (<$t>::MAX as usize)
+                    .wrapping_sub(<$t>::MIN as usize)
+                    .saturating_add(1)
             }
         }
     };
@@ -181,6 +223,11 @@ macro_rules! impl_iter_variants_for_nonzeros {
                         f(i);
                     }
                 }
+            }
+
+            fn iter_variants_count() -> usize {
+                (<$prim>::MAX as usize)
+                    .wrapping_sub(<$prim>::MIN as usize)
             }
         }
     };
@@ -221,7 +268,7 @@ impl_iter_variants_tuple!();
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
-    use core::num::{NonZeroU8, Wrapping};
+    use core::num::{NonZeroI128, NonZeroI8, NonZeroIsize, NonZeroU128, NonZeroU16, NonZeroU8, NonZeroUsize, Wrapping};
 
     use super::IterVariants;
 
@@ -235,6 +282,13 @@ mod tests {
     enum A {
         B,
         C,
+    }
+
+    #[derive(IterVariants, Clone, Copy)]
+    enum B {
+        F3(bool, bool, bool),
+        F2(bool, bool),
+        F1(bool),
     }
 
     #[derive(IterVariants)]
@@ -341,5 +395,35 @@ mod tests {
                 Some((true, true))
             ]
         );
+    }
+
+    fn test_variants_count() {
+        assert_eq!(char::iter_variants_count(), 0x11_0000);
+        assert_eq!(i8::iter_variants_count(), 0x100);
+        assert_eq!(i16::iter_variants_count(), 0x10000);
+        assert_eq!(u8::iter_variants_count(), 0x100);
+        assert_eq!(u16::iter_variants_count(), 0x10000);
+        assert_eq!(isize::iter_variants_count(), usize::MAX);
+        assert_eq!(usize::iter_variants_count(), usize::MAX);
+        assert_eq!(NonZeroI8::iter_variants_count(), 0xff);
+        assert_eq!(NonZeroU8::iter_variants_count(), 0xff);
+        assert_eq!(NonZeroU16::iter_variants_count(), 0xffff);
+        assert_eq!(NonZeroIsize::iter_variants_count(), usize::MAX);
+        assert_eq!(NonZeroUsize::iter_variants_count(), usize::MAX);
+        #[cfg(any(target_pointer_width = "64", target_pointer_width = "32"))]
+        {
+            assert_eq!(NonZeroI128::iter_variants_count(), usize::MAX);
+            assert_eq!(NonZeroU128::iter_variants_count(), usize::MAX);
+            assert_eq!(i128::iter_variants_count(), usize::MAX);
+            assert_eq!(u128::iter_variants_count(), usize::MAX);
+        }
+        assert_eq!(<()>::iter_variants_count(), 1);
+        assert_eq!(<(bool,)>::iter_variants_count(), 2);
+        assert_eq!(<(bool, bool)>::iter_variants_count(), 4);
+        assert_eq!(<(bool, bool, bool)>::iter_variants_count(), 8);
+
+        assert_eq!(A::iter_variants_count(), 2);
+        assert_eq!(Baz::<bool>::iter_variants_count(), 4);
+        assert_eq!(B::iter_variants_count(), 14);
     }
 }
