@@ -128,7 +128,7 @@ pub trait IterVariants {
     /// ```
     #[cfg(feature = "collect")]
     fn collect_variants() -> std::vec::Vec<Self::IterVariantsInput> {
-        let mut vec = std::vec::Vec::new();
+        let mut vec = std::vec::Vec::with_capacity(Self::iter_variants_count());
         Self::iter_variants(|value| {
             vec.push(value);
         });
