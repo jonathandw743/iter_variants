@@ -5,6 +5,9 @@ use core::{
     num::*,
 };
 
+#[cfg(feature = "collect")]
+extern crate std;
+
 pub use iter_variants_derive::IterVariants;
 
 macro_rules! impl_iter_variants_tuple {
@@ -74,6 +77,7 @@ macro_rules! impl_iter_variants_tuple {
 /// ```
 pub trait IterVariants {
     type IterVariantsInput;
+
     /// Iterate each variant
     ///
     /// Calls the provided function on all variants of `Self` to any depth.
@@ -94,6 +98,28 @@ pub trait IterVariants {
     /// ]);
     /// ```
     fn iter_variants<F: FnMut(Self::IterVariantsInput)>(f: F);
+
+    /// Collect each variant into a `Vec`
+    ///
+    /// # Examples
+    /// ```
+    /// # use iter_variants::IterVariants;
+    /// assert_eq!(Option::<(bool, bool)>::collect_variants(), [
+    ///     None,
+    ///     Some((false, false)),
+    ///     Some((true, false)),
+    ///     Some((false, true)),
+    ///     Some((true, true))
+    /// ]);
+    /// ```
+    #[cfg(feature = "collect")]
+    fn collect_variants() -> std::vec::Vec<Self::IterVariantsInput> {
+        let mut vec = std::vec::Vec::new();
+        Self::iter_variants(|value| {
+            vec.push(value);
+        });
+        vec
+    }
 }
 
 impl<T: IterVariants> IterVariants for Wrapping<T> {
@@ -285,13 +311,28 @@ mod tests {
     }
 
     #[test]
-    fn example() {
+    fn iter_variants_example() {
         let mut vec = vec![];
         Option::<(bool, bool)>::iter_variants(|value| {
             vec.push(value);
         });
         assert_eq!(
             vec,
+            [
+                None,
+                Some((false, false)),
+                Some((true, false)),
+                Some((false, true)),
+                Some((true, true))
+            ]
+        );
+    }
+
+    #[cfg(feature = "collect")]
+    #[test]
+    fn collect_variants_example() {
+        assert_eq!(
+            Option::<(bool, bool)>::collect_variants(),
             [
                 None,
                 Some((false, false)),
