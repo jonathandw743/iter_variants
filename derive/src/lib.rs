@@ -88,13 +88,21 @@ fn used_types(data: &Data) -> Vec<Type> {
     }
 }
 
+fn do_count_fields(fields: &Fields) -> pm2::TokenStream {
+    let fields_count = fields.iter().map(|field| {
+        let ty = &field.ty;
+        quote! { <#ty as IterVariants>::iter_variants_count() }
+    });
+    quote! { (1 #(* #fields_count)*) }
+}
+
 #[proc_macro_derive(IterVariants)]
 pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let ident = input.ident;
     let used_types = used_types(&input.data);
 
-    let output = match input.data {
+    let output = match &input.data {
         Data::Enum(data_enum) => {
             let arms = data_enum.variants.iter().map(|variant| {
                 let variant_ident = &variant.ident;
@@ -109,6 +117,17 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
         _ => syn::Error::new_spanned(&ident, "`IterVariants` can only be derived for enums or structs")
             .to_compile_error(),
     };
+    let variants_count = match &input.data {
+        Data::Enum(data_enum) => {
+            let counts = data_enum.variants.iter().map(|variant| {
+                do_count_fields(&variant.fields)
+            });
+
+            quote! { 0 #(+ #counts)* }
+        }
+        Data::Struct(data_struct) => do_count_fields(&data_struct.fields),
+        _ => unreachable!(),
+    };
 
     let (implg, typeg, where_clause) = input.generics.split_for_impl();
     let where_clause = where_clause.map(|w| &w.predicates);
@@ -122,6 +141,10 @@ pub fn iter_variants_derive(input: pm::TokenStream) -> pm::TokenStream {
             #[allow(unused_mut)]
             fn iter_variants<F: FnMut(Self::IterVariantsInput)>(mut f: F) {
                 #output
+            }
+
+            fn iter_variants_count() -> usize {
+                #variants_count
             }
         }
     };
