@@ -202,6 +202,9 @@ mod tests {
     extern crate std;
     use std::vec;
 
+    #[derive(IterVariants)]
+    struct Unit;
+
     #[derive(IterVariants, Clone, Copy)]
     enum A {
         B,
@@ -229,6 +232,36 @@ mod tests {
     {
         A(bool),
         B(T),
+    }
+
+    #[derive(IterVariants)]
+    enum Assoc<T: IntoIterator> {
+        A(bool),
+        B(T::Item),
+    }
+
+    #[derive(IterVariants)]
+    enum Assoc1<T: IntoIterator>
+    where
+        T::Item: Copy,
+    {
+        A(bool),
+        B(T, T::Item),
+    }
+
+    #[derive(IterVariants)]
+    struct Assoc2<T: IntoIterator>
+    where
+        T::Item: Copy,
+    {
+        a: bool,
+        b: T::Item,
+    }
+
+    #[derive(IterVariants)]
+    struct Assoc3<T: Copy> {
+        a: bool,
+        b: (T,),
     }
 
     #[test]
