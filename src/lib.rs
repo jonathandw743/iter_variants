@@ -68,7 +68,7 @@ macro_rules! impl_iter_variants_tuple {
 /// ```
 /// use iter_variants::IterVariants;
 ///
-/// <(bool, bool)>::iter_variants(|value| {
+/// Option::<(bool, bool)>::iter_variants(|value| {
 ///     println!("{:?}", value);
 /// });
 /// ```
@@ -77,20 +77,20 @@ pub trait IterVariants {
     /// Iterate each variant
     ///
     /// Calls the provided function on all variants of `Self` to any depth.
-    /// For example, for `Option<bool>`, `f(Some(true))`, `f(Some(false))` and `f(None)` will be called.
     ///
     /// # Examples
     /// ```
     /// # use iter_variants::IterVariants;
     /// let mut vec = vec![];
-    /// <(bool, bool)>::iter_variants(|value| {
+    /// Option::<(bool, bool)>::iter_variants(|value| {
     ///     vec.push(value);
     /// });
     /// assert_eq!(vec, [
-    ///     (false, false),
-    ///     (true, false),
-    ///     (false, true),
-    ///     (true, true)
+    ///     None,
+    ///     Some((false, false)),
+    ///     Some((true, false)),
+    ///     Some((false, true)),
+    ///     Some((true, true))
     /// ]);
     /// ```
     fn iter_variants<F: FnMut(Self::IterVariantsInput)>(f: F);
@@ -199,6 +199,9 @@ mod tests {
 
     use super::IterVariants;
 
+    extern crate std;
+    use std::vec;
+
     #[derive(IterVariants, Clone, Copy)]
     enum A {
         B,
@@ -244,6 +247,24 @@ mod tests {
                 Some(Baz::B((true, false))),
                 Some(Baz::B((false, true))),
                 Some(Baz::B((true, true))),
+            ]
+        );
+    }
+
+    #[test]
+    fn example() {
+        let mut vec = vec![];
+        Option::<(bool, bool)>::iter_variants(|value| {
+            vec.push(value);
+        });
+        assert_eq!(
+            vec,
+            [
+                None,
+                Some((false, false)),
+                Some((true, false)),
+                Some((false, true)),
+                Some((true, true))
             ]
         );
     }
