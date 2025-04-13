@@ -97,7 +97,7 @@ pub trait IterVariants {
     ///
     /// # Examples
     /// ```
-    /// # use iter_variants::IterVariants;
+    /// use iter_variants::IterVariants;
     /// let mut vec = vec![];
     /// Option::<(bool, bool)>::iter_variants(|value| {
     ///     vec.push(value);
@@ -116,7 +116,7 @@ pub trait IterVariants {
     ///
     /// # Examples
     /// ```
-    /// # use iter_variants::IterVariants;
+    /// use iter_variants::IterVariants;
     /// assert_eq!(Option::<(bool, bool)>::collect_variants(), [
     ///     None,
     ///     Some((false, false)),
@@ -136,6 +136,9 @@ pub trait IterVariants {
     /// Rough variants count, used for optimization
     ///
     /// The result may overflow usize, use [`usize::MAX`]
+    ///
+    /// # Examples
+    /// ```
     /// assert_eq!(u8::iter_variants_count(), 256);
     /// assert_eq!(Option::<u8>::iter_variants_count(), 257);
     /// ```
