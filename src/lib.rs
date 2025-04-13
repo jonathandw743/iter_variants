@@ -135,6 +135,10 @@ pub trait IterVariants {
 
     /// Rough variants count, used for optimization
     ///
+    /// If for some reason the number of variants cannot be determined,
+    /// this method can just return `0` which will cause [`IterVariants::collect_variants`]
+    /// to be less efficient but still correct.
+    ///
     /// The result may overflow usize, use [`usize::MAX`]
     ///
     /// # Examples
@@ -232,8 +236,7 @@ macro_rules! impl_iter_variants_for_nonzeros {
             }
 
             fn iter_variants_count() -> usize {
-                (<$prim>::MAX as usize)
-                    .wrapping_sub(<$prim>::MIN as usize)
+                (<$prim>::MAX as usize).wrapping_sub(<$prim>::MIN as usize)
             }
         }
     };
@@ -274,7 +277,10 @@ impl_iter_variants_tuple!();
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
-    use core::num::{NonZeroI128, NonZeroI8, NonZeroIsize, NonZeroU128, NonZeroU16, NonZeroU8, NonZeroUsize, Wrapping};
+    use core::num::{
+        NonZeroI8, NonZeroI128, NonZeroIsize, NonZeroU8, NonZeroU16, NonZeroU128, NonZeroUsize,
+        Wrapping,
+    };
 
     use super::IterVariants;
 
