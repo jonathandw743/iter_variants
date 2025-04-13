@@ -139,6 +139,7 @@ pub trait IterVariants {
     ///
     /// # Examples
     /// ```
+    /// use iter_variants::IterVariants;
     /// assert_eq!(u8::iter_variants_count(), 256);
     /// assert_eq!(Option::<u8>::iter_variants_count(), 257);
     /// ```
